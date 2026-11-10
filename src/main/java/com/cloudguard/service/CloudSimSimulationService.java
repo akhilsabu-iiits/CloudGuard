@@ -10,6 +10,7 @@ import org.cloudsimplus.datacenters.DatacenterSimple;
 import org.cloudsimplus.hosts.HostSimple;
 import org.cloudsimplus.resources.Pe;
 import org.cloudsimplus.resources.PeSimple;
+import org.cloudsimplus.schedulers.cloudlet.CloudletSchedulerSpaceShared;
 import org.cloudsimplus.utilizationmodels.UtilizationModelDynamic;
 import org.cloudsimplus.vms.VmSimple;
 import org.springframework.stereotype.Service;
@@ -144,6 +145,11 @@ public class CloudSimSimulationService {
         for (int v=0; v<value(i.vmCount(),4); v++) {
             VmSimple vm = new VmSimple(value(i.vmMips(),2000L), value(i.pesPerVm(),1));
             vm.setRam(value(i.vmRamMb(),4096L)).setBw(10000).setSize(100000);
+            // Space-shared scheduling: cloudlets queue and run to completion on a PE instead of
+            // continuously time-slicing it. Under heavy oversubscription this avoids the O(n^2)
+            // event rescheduling of the default time-shared scheduler, so large runs finish quickly
+            // in wall-clock time. Capacity, workload and metrics are unchanged.
+            vm.setCloudletScheduler(new CloudletSchedulerSpaceShared());
             vms.add(vm);
         }
         broker.submitVmList(vms);
