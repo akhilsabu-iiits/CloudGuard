@@ -20,7 +20,7 @@ import java.util.*;
 @Service
 public class CloudSimSimulationService {
     public record Scenario(String id, String name, int tasks, boolean protectedMode, boolean thresholdSweep) {}
-    private record OneRun(int generated, int admitted, int rejected, int completed, int failed,
+    private record OneRun(int generated, int admitted, int rejected, int completed, int unfinished, int explicitlyFailed,
                           double avg, double p95, double max, double makespan, double throughput,
                           List<ExperimentResult.TaskResult> tasks) {}
 
@@ -61,7 +61,7 @@ public class CloudSimSimulationService {
                 OneRun r = results[i];
                 variants.add(new ExperimentResult.VariantResult("Capacity " + settings[i][0] + " / refill " + settings[i][1],
                     settings[i][0], settings[i][1], r.admitted(), r.rejected(), pct(r.rejected(), r.generated()),
-                    r.completed(), r.avg(), r.p95(), r.throughput()));
+                    r.completed(), r.unfinished(), r.explicitlyFailed(), r.avg(), r.p95(), r.throughput()));
             }
             main = results[1]; bucket = 50; refill = 5;
         } else {
@@ -70,7 +70,7 @@ public class CloudSimSimulationService {
 
         return new ExperimentResult(experimentId, scenario.id(), scenario.name(), Instant.now(), "COMPLETED",
             main.generated(), main.admitted(), main.rejected(), pct(main.rejected(), main.generated()),
-            main.completed(), main.failed(), main.avg(), main.p95(), main.max(), main.makespan(), main.throughput(),
+            main.completed(), main.unfinished(), main.explicitlyFailed(), main.avg(), main.p95(), main.max(), main.makespan(), main.throughput(),
             protectedMode, protectedMode ? bucket : null, protectedMode ? refill : null, trials,
             main.tasks(), variants,
             "CloudSim Plus models datacenter/host/VM task execution. Synthetic DoS-like pressure is represented as controlled Cloudlet arrivals; this is not real HTTP or network-layer DDoS traffic.");
@@ -81,9 +81,13 @@ public class CloudSimSimulationService {
         List<OneRun> runs = new ArrayList<>();
         for (int t=0; t<trials; t++) runs.add(runOnce(infra, count, duration, length, seed + t, protectedMode, capacity, refill));
         OneRun last = runs.get(runs.size()-1);
-        return new OneRun(last.generated(), last.admitted(), last.rejected(),
-            (int)Math.round(runs.stream().mapToInt(OneRun::completed).average().orElse(0)),
-            (int)Math.round(runs.stream().mapToInt(OneRun::failed).average().orElse(0)),
+        // Derive unfinished from admitted so the invariant holds exactly even after averaging across trials.
+        int admitted = last.admitted();
+        int completed = Math.min(admitted, (int)Math.round(runs.stream().mapToInt(OneRun::completed).average().orElse(0)));
+        int explicitlyFailed = Math.min(admitted - completed, (int)Math.round(runs.stream().mapToInt(OneRun::explicitlyFailed).average().orElse(0)));
+        int unfinished = admitted - completed - explicitlyFailed;
+        return new OneRun(last.generated(), admitted, last.rejected(),
+            completed, unfinished, explicitlyFailed,
             avg(runs, OneRun::avg), avg(runs, OneRun::p95), avg(runs, OneRun::max),
             avg(runs, OneRun::makespan), avg(runs, OneRun::throughput), last.tasks());
     }
@@ -124,7 +128,10 @@ public class CloudSimSimulationService {
         List<Cloudlet> admitted = new ArrayList<>();
         for (Arrival a : arrivals) {
             if (!protectedMode || bucket.tryAcquire(a.time(), 1.0)) {
-                CloudletSimple cloudlet = new CloudletSimple(a.length(), 1, new UtilizationModelDynamic(0.5));
+                CloudletSimple cloudlet = new CloudletSimple(a.length(), 1);
+                cloudlet.setUtilizationModelCpu(new UtilizationModelDynamic(0.5));
+                cloudlet.setUtilizationModelRam(new UtilizationModelDynamic(0.05));
+                cloudlet.setUtilizationModelBw(new UtilizationModelDynamic(0.05));
                 cloudlet.setSubmissionDelay(a.time());
                 admitted.add(cloudlet);
             }
@@ -133,28 +140,29 @@ public class CloudSimSimulationService {
         simulation.start();
 
         List<Cloudlet> finished = broker.getCloudletFinishedList();
-        int failedCount = Math.max(0, admitted.size() - finished.size());
-        List<Double> completionTimes = new ArrayList<>();
         List<ExperimentResult.TaskResult> taskResults = new ArrayList<>();
-        double firstArrival = Double.POSITIVE_INFINITY, lastFinish = 0, max = 0;
+        List<MetricsCalculator.Completion> completions = new ArrayList<>();
         for (Cloudlet c : finished) {
             double arrival = c.getSubmissionDelay();
             double finish = c.getFinishTime();
             double start = c.getStartTime();
             double completion = Math.max(0, finish - arrival);
-            completionTimes.add(completion);
-            firstArrival = Math.min(firstArrival, arrival);
-            lastFinish = Math.max(lastFinish, finish);
-            max = Math.max(max, completion);
+            completions.add(new MetricsCalculator.Completion(arrival, finish));
             taskResults.add(new ExperimentResult.TaskResult(c.getId(), arrival, start, finish, completion, c.getStatus().toString()));
         }
-        completionTimes.sort(Double::compareTo);
-        double mean = completionTimes.stream().mapToDouble(Double::doubleValue).average().orElse(0);
-        double p95 = completionTimes.isEmpty() ? 0 : completionTimes.get(Math.max(0, (int)Math.ceil(completionTimes.size()*0.95)-1));
-        double makespan = completionTimes.isEmpty() ? 0 : Math.max(0, lastFinish - firstArrival);
-        double throughput = makespan > 0 ? finished.size() / makespan : 0;
-        return new OneRun(taskCount, admitted.size(), taskCount-admitted.size(), finished.size(), failedCount,
-            mean, p95, max, makespan, throughput, taskResults);
+        // Only CloudSim-reported failures count as "explicitly failed"; other non-finished admitted tasks are "unfinished".
+        int explicitlyFailed = 0;
+        for (Cloudlet c : admitted) {
+            Cloudlet.Status st = c.getStatus();
+            if (st == Cloudlet.Status.FAILED || st == Cloudlet.Status.FAILED_RESOURCE_UNAVAILABLE) explicitlyFailed++;
+        }
+        double minAdmittedArrival = admitted.isEmpty() ? 0
+            : admitted.stream().mapToDouble(Cloudlet::getSubmissionDelay).min().orElse(0);
+        MetricsCalculator.Metrics m = MetricsCalculator.compute(admitted.size(), minAdmittedArrival, completions, explicitlyFailed);
+        return new OneRun(taskCount, admitted.size(), taskCount - admitted.size(),
+            m.completed(), m.unfinished(), m.explicitlyFailed(),
+            m.averageCompletionTime(), m.p95CompletionTime(), m.maxCompletionTime(),
+            m.makespan(), m.throughput(), taskResults);
     }
 
     private double pct(int n, int total) { return total == 0 ? 0 : 100.0*n/total; }

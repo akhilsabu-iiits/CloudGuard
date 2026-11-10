@@ -14,6 +14,7 @@ public record ExperimentResult(
     int rejectedTasks,
     double rejectedWorkloadPercent,
     int completedTasks,
+    int unfinishedTasks,
     int failedTasks,
     double averageCompletionTimeSeconds,
     double p95CompletionTimeSeconds,
@@ -32,6 +33,7 @@ public record ExperimentResult(
                              double finishTimeSeconds, double completionTimeSeconds, String status) {}
     public record VariantResult(String label, int bucketCapacity, int refillTokensPerSecond,
                                 int admittedTasks, int rejectedTasks, double rejectedWorkloadPercent,
-                                int completedTasks, double averageCompletionTimeSeconds,
+                                int completedTasks, int unfinishedTasks, int failedTasks,
+                                double averageCompletionTimeSeconds,
                                 double p95CompletionTimeSeconds, double throughputTasksPerSecond) {}
 }
