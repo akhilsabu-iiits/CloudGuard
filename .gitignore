@@ -1,0 +1,7 @@
+target/
+# Local H2 database files and lock/temp artifacts (keep the data/ folder, ignore its contents)
+data/*
+!data/.gitkeep
+.idea/
+.vscode/
+*.log

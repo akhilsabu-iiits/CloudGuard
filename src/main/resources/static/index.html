@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101a30"><meta name="description" content="CloudGuard cloud security simulation and performance evaluation platform">
+  <title>CloudGuard | Cloud Security Lab</title><link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark">⬡</div><div><b>CloudGuard</b><small>CLOUD SECURITY LAB</small></div></div>
+    <div class="workspace-label">WORKSPACE</div>
+    <nav id="nav">
+      <button class="nav-item active" data-page="overview"><span>▦</span> Overview</button>
+      <button class="nav-item" data-page="infrastructure"><span>▤</span> Infrastructure</button>
+      <button class="nav-item" data-page="workloads"><span>⌁</span> Workload studio</button>
+      <button class="nav-item" data-page="security"><span>⬡</span> Security policy</button>
+      <button class="nav-item" data-page="scenarios"><span>◈</span> Scenario manager</button>
+      <button class="nav-item" data-page="analytics"><span>▥</span> Results & analytics</button>
+      <button class="nav-item" data-page="history"><span>◷</span> Experiment history</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="engine-status"><i></i><div><b>Simulation engine</b><small id="engineStatus">Checking connection…</small></div></div><div class="sidebar-foot">M.Tech Cyber Security Project<br>CloudSim Plus · Research workspace</div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><button class="mobile-menu" id="mobileMenu">☰</button><div class="crumb">CloudGuard <span>/</span> <b id="pageCrumb">Overview</b></div><div class="top-right"><span class="server-pill"><i></i> Local workspace</span><div class="avatar">CG</div></div></header>
+    <section class="content" id="content">
+      <div class="page-heading"><div><div class="eyebrow">RESEARCH CONTROL CENTER</div><h1>Simulation overview</h1><p>Evaluate cloud service resilience under synthetic workload pressure.</p></div><button class="btn btn-primary" data-goto="scenarios">＋ New experiment</button></div>
+      <div class="metric-grid">
+        <article class="metric-card"><div class="metric-top"><span>Experiments saved</span><span class="metric-icon blue">◈</span></div><strong id="metricExperiments">0</strong><small>Recorded simulation runs</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Tasks generated</span><span class="metric-icon violet">▦</span></div><strong id="metricGenerated">—</strong><small>Across loaded experiment</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Avg. completion time</span><span class="metric-icon cyan">◷</span></div><strong id="metricCompletion">—</strong><small>Seconds · completed tasks</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Rejected workload</span><span class="metric-icon orange">⬡</span></div><strong id="metricRejected">—</strong><small>Admission policy rejections</small></article>
+      </div>
+      <div class="overview-grid">
+        <article class="panel scenario-panel"><div class="panel-head"><div><h2>Research scenarios</h2><p>Five controlled experiment conditions</p></div><button class="text-btn" data-goto="scenarios">View all →</button></div><div id="scenarioPreview" class="scenario-list"></div></article>
+        <article class="panel quick-panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Continue your experiment workflow</p></div></div><button class="quick-action" data-goto="infrastructure"><span class="quick-icon">▤</span><span><b>Configure infrastructure</b><small>Hosts, CPU, RAM and VMs</small></span><em>→</em></button><button class="quick-action" data-goto="security"><span class="quick-icon violet-bg">⬡</span><span><b>Configure admission policy</b><small>Token Bucket parameters</small></span><em>→</em></button><button class="quick-action" data-goto="analytics"><span class="quick-icon cyan-bg">▥</span><span><b>Analyse results</b><small>Performance and security metrics</small></span><em>→</em></button></article>
+      </div>
+      <article class="panel recent-panel"><div class="panel-head"><div><h2>Recent experiments</h2><p>Your saved simulation runs appear here</p></div><button class="text-btn" data-goto="history">Full history →</button></div><div id="recentTable" class="empty-state"><div class="empty-icon">◷</div><b>No experiments yet</b><p>Run your first CloudGuard scenario to see results here.</p><button class="btn btn-secondary" data-goto="scenarios">Open scenario manager</button></div></article>
+      <div class="research-note"><span>ⓘ</span><div><b>Research model note</b><p>CloudSim Plus models cloud infrastructure and Cloudlet execution. CloudGuard represents DoS-like pressure as controlled synthetic task arrivals; it does not generate real HTTP or network-layer DDoS traffic.</p></div></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="/app.js"></script>
+</body></html>
