@@ -22,6 +22,8 @@ CloudSim Plus simulates cloud infrastructure and Cloudlet execution. This projec
 
 The current workload generator uses uniformly spaced arrivals across the selected workload window, with seeded ±10% task-length variation. This is an initial reproducible workload model. If the research design later requires Poisson or burst arrivals, those should be added as explicit workload models and evaluated separately.
 
+Repeated trials use the same uniformly spaced, deterministic arrival times for every trial; only the ±10% task-length randomness changes, because the trial index is added to the base random seed (`seed + trial index`). As a result, admission decisions (and therefore admitted/rejected counts) do not vary across trials — trials capture task-length variance only, not arrival variance. Reported trial metrics are averaged across the trials.
+
 ## Scenarios
 
 | Scenario | Tasks | Admission policy | Purpose |
@@ -34,16 +36,46 @@ The current workload generator uses uniformly spaced arrivals across the selecte
 
 S1–S5 use the same infrastructure profile unless a user intentionally changes it. The same task-arrival window and task-length configuration should be retained for matched comparisons.
 
+Admission control is **scenario-driven**: S1/S2 run unprotected and S3/S4/S5 run protected. The API request field `Security.enabled` does **not** currently toggle protection — the selected scenario determines whether the Token Bucket is applied. S5 evaluates three **hardcoded** Token Bucket threshold settings (capacity / refill-per-simulated-second): 25/2, 50/5 and 100/10; the request-supplied capacity and refill values are not used for the S5 sweep.
+
 ## Metrics
 
-- Generated, admitted, rejected, completed and failed tasks.
-- Rejected workload percentage = rejected tasks / generated tasks × 100.
+Task counters (reported for the main result and for each S5 variant):
+
+- **generatedTasks** – total synthetic tasks created for the workload.
+- **admittedTasks** – tasks allowed through Token Bucket admission control and submitted to CloudSim Plus.
+- **rejectedTasks** – generated tasks rejected by Token Bucket admission control (never submitted to CloudSim Plus).
+- **completedTasks** – admitted tasks whose Cloudlets completed successfully in CloudSim.
+- **unfinishedTasks** – admitted tasks that neither completed nor were explicitly failed (for example, still queued or resource-starved when the simulation ended).
+- **failedTasks** – only tasks CloudSim explicitly reported as failed (status `FAILED` / `FAILED_RESOURCE_UNAVAILABLE`).
+
+Counter invariant (holds for the main result and every S5 variant):
+
+```
+completedTasks + unfinishedTasks + failedTasks = admittedTasks
+```
+
+Rejected tasks are tracked separately from the admitted-task invariant and satisfy `admittedTasks + rejectedTasks = generatedTasks`.
+
+Timing and rate metrics:
+
+- Rejected workload percentage = rejectedTasks / generatedTasks × 100.
 - Per-task completion time = Cloudlet finish time − configured task arrival time.
 - Average, P95 and maximum completion time for completed Cloudlets.
-- Makespan = latest finish time − earliest task arrival time.
-- Throughput = completed Cloudlets / makespan.
+- Makespan = latest finish time (completed) − earliest admitted task arrival time; 0 if no task completes.
+- Throughput = completedTasks / makespan; 0 when makespan is 0 (guarded against division by zero).
 
-Policy rejections are counted separately from tasks that were admitted but failed in the simulation. Task-level CSV currently includes completed Cloudlets; rejected tasks are represented in aggregate counters, not as Cloudlet records.
+Task-level CSV currently includes completed Cloudlets; rejected and unfinished tasks are represented in aggregate counters, not as Cloudlet records.
+
+### Resource-utilisation model (configured demand, not measured output)
+
+Each Cloudlet is configured with separate CloudSim Plus utilisation models:
+
+- CPU: 50%
+- RAM: 5%
+- Bandwidth: 5%
+
+These are **configured utilisation demands** that drive the simulation — they describe how much of a VM's CPU, RAM and bandwidth each task requests. They are **not** measured experiment output metrics. The application does **not** currently sample or report actual host/VM CPU or RAM utilisation, and it does **not** compute a protection-overhead metric. Both are listed as future work under "Current limitations / next engineering tasks" below.
 
 ## API
 
@@ -77,6 +109,6 @@ CloudSim Plus is pinned to 8.5.7 in `pom.xml`. Maven Central lists this release 
 2. Add authentication and per-user access controls before public multi-user deployment.
 3. Add a durable production database such as PostgreSQL for shared hosting.
 4. Add server-side job queue/cancellation and progress updates for long experiment suites.
-5. Add validated CPU/RAM utilisation sampling and report methodology.
+5. Add validated CPU/RAM utilisation sampling and a protection-overhead metric and report methodology. Neither CPU/RAM utilisation measurement nor protection-overhead measurement is implemented yet; the CPU/RAM/bandwidth figures in this document are configured Cloudlet demands, not measured output.
 6. Add Poisson and burst-arrival workload models if required by the approved research methodology.
-7. Add tests for metric formulas, token refill boundaries, repeated-run aggregation and scenario invariants.
+7. Tests already implemented: `MetricsCalculatorTest` covers metric-formula calculations (makespan, throughput, completion time), full/partial/zero completion, explicit-failure separation and the counter invariant (completedTasks + unfinishedTasks + failedTasks = admittedTasks); `TokenBucketTest` covers admission when the bucket is full/empty, simulation-time refill and the capacity upper bound. Remaining test-coverage gaps: repeated-run (multi-trial) aggregation, scenario-level invariants (for example, unprotected scenarios rejecting no tasks), the end-to-end CloudSim `runOnce` simulation path, and REST API endpoint tests.
