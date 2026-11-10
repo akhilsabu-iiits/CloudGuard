@@ -22,6 +22,9 @@ public class CloudSimSimulationService {
     public record Scenario(String id, String name, int tasks, boolean protectedMode, boolean thresholdSweep) {}
     private record OneRun(int generated, int admitted, int rejected, int completed, int unfinished, int explicitlyFailed,
                           double avg, double p95, double max, double makespan, double throughput,
+                          double completionRatePercent,
+                          Map<String, ExperimentResult.AggregateStat> statistics,
+                          List<ExperimentResult.TrialSummary> trialSummaries,
                           List<ExperimentResult.TaskResult> tasks) {}
 
     public List<Scenario> scenarios() {
@@ -61,7 +64,8 @@ public class CloudSimSimulationService {
                 OneRun r = results[i];
                 variants.add(new ExperimentResult.VariantResult("Capacity " + settings[i][0] + " / refill " + settings[i][1],
                     settings[i][0], settings[i][1], r.admitted(), r.rejected(), pct(r.rejected(), r.generated()),
-                    r.completed(), r.unfinished(), r.explicitlyFailed(), r.avg(), r.p95(), r.throughput()));
+                    r.completed(), r.unfinished(), r.explicitlyFailed(), r.completionRatePercent(),
+                    r.avg(), r.p95(), r.throughput(), r.statistics()));
             }
             main = results[1]; bucket = 50; refill = 5;
         } else {
@@ -70,8 +74,10 @@ public class CloudSimSimulationService {
 
         return new ExperimentResult(experimentId, scenario.id(), scenario.name(), Instant.now(), "COMPLETED",
             main.generated(), main.admitted(), main.rejected(), pct(main.rejected(), main.generated()),
-            main.completed(), main.unfinished(), main.explicitlyFailed(), main.avg(), main.p95(), main.max(), main.makespan(), main.throughput(),
+            main.completed(), main.unfinished(), main.explicitlyFailed(), main.completionRatePercent(),
+            main.avg(), main.p95(), main.max(), main.makespan(), main.throughput(),
             protectedMode, protectedMode ? bucket : null, protectedMode ? refill : null, trials,
+            main.statistics(), main.trialSummaries(),
             main.tasks(), variants,
             "CloudSim Plus models datacenter/host/VM task execution. Synthetic DoS-like pressure is represented as controlled Cloudlet arrivals; this is not real HTTP or network-layer DDoS traffic.");
     }
@@ -86,14 +92,41 @@ public class CloudSimSimulationService {
         int completed = Math.min(admitted, (int)Math.round(runs.stream().mapToInt(OneRun::completed).average().orElse(0)));
         int explicitlyFailed = Math.min(admitted - completed, (int)Math.round(runs.stream().mapToInt(OneRun::explicitlyFailed).average().orElse(0)));
         int unfinished = admitted - completed - explicitlyFailed;
+
+        // Collect per-trial values for standard-deviation / confidence-interval reporting.
+        int n = runs.size();
+        double[] completedArr = new double[n], rateArr = new double[n], avgArr = new double[n], makeArr = new double[n], thrArr = new double[n];
+        List<ExperimentResult.TrialSummary> summaries = new ArrayList<>();
+        for (int t = 0; t < n; t++) {
+            OneRun r = runs.get(t);
+            double rate = MetricsCalculator.completionRate(r.completed(), r.admitted());
+            completedArr[t] = r.completed(); rateArr[t] = rate; avgArr[t] = r.avg(); makeArr[t] = r.makespan(); thrArr[t] = r.throughput();
+            summaries.add(new ExperimentResult.TrialSummary(t, seed + t, r.admitted(), r.completed(), r.unfinished(), r.explicitlyFailed(),
+                rate, r.avg(), r.makespan(), r.throughput()));
+        }
+        Map<String, ExperimentResult.AggregateStat> stats = new LinkedHashMap<>();
+        stats.put("completedTasks", agg(completedArr));
+        stats.put("completionRatePercent", agg(rateArr));
+        stats.put("averageCompletionTimeSeconds", agg(avgArr));
+        stats.put("makespanSeconds", agg(makeArr));
+        stats.put("throughputTasksPerSecond", agg(thrArr));
+        double completionRate = MetricsCalculator.completionRate(completed, admitted);
+
         return new OneRun(last.generated(), admitted, last.rejected(),
             completed, unfinished, explicitlyFailed,
             avg(runs, OneRun::avg), avg(runs, OneRun::p95), avg(runs, OneRun::max),
-            avg(runs, OneRun::makespan), avg(runs, OneRun::throughput), last.tasks());
+            avg(runs, OneRun::makespan), avg(runs, OneRun::throughput),
+            completionRate, stats, summaries, last.tasks());
     }
 
     private double avg(List<OneRun> runs, java.util.function.ToDoubleFunction<OneRun> f) {
         return runs.stream().mapToDouble(f).average().orElse(0);
+    }
+
+    private ExperimentResult.AggregateStat agg(double[] values) {
+        return new ExperimentResult.AggregateStat(MetricsCalculator.mean(values),
+            MetricsCalculator.sampleStdDev(values), MetricsCalculator.ci95HalfWidth(values),
+            values.length, MetricsCalculator.ciAvailable(values));
     }
 
     private OneRun runOnce(RunRequest.Infrastructure i, int taskCount, int duration, long taskLength,
@@ -159,10 +192,12 @@ public class CloudSimSimulationService {
         double minAdmittedArrival = admitted.isEmpty() ? 0
             : admitted.stream().mapToDouble(Cloudlet::getSubmissionDelay).min().orElse(0);
         MetricsCalculator.Metrics m = MetricsCalculator.compute(admitted.size(), minAdmittedArrival, completions, explicitlyFailed);
+        double completionRate = MetricsCalculator.completionRate(m.completed(), admitted.size());
         return new OneRun(taskCount, admitted.size(), taskCount - admitted.size(),
             m.completed(), m.unfinished(), m.explicitlyFailed(),
             m.averageCompletionTime(), m.p95CompletionTime(), m.maxCompletionTime(),
-            m.makespan(), m.throughput(), taskResults);
+            m.makespan(), m.throughput(),
+            completionRate, Map.of(), List.of(), taskResults);
     }
 
     private double pct(int n, int total) { return total == 0 ? 0 : 100.0*n/total; }
