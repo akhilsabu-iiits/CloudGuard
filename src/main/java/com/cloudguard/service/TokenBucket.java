@@ -23,4 +23,7 @@ public final class TokenBucket {
         tokens -= cost;
         return true;
     }
+
+    /** Read-only snapshot of the current token count (for monitoring; does not change behaviour). */
+    public double getTokens() { return tokens; }
 }
