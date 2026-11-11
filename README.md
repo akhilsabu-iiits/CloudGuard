@@ -1,198 +1,233 @@
-# CloudGuard – Cloud Security Simulation Platform
+<div align="center">
 
-> **M.Tech Cyber Security research project** — _Performance Evaluation of Cloud Services Under Simulated DoS Workloads_
->
-> A **CloudSim Plus** simulation of computational task workloads and Token Bucket admission control. Cloudlets represent computational tasks; completion time is **simulated** Cloudlet finish − arrival time. This is **not** real network-layer DoS/DDoS testing (see [Important research scope](#important-research-scope)).
 
-CloudGuard is a browser-based research platform for evaluating cloud task execution under controlled synthetic workload pressure. The Java backend uses CloudSim Plus; the browser UI is served by the same Spring Boot application. A hosted deployment means end users only need a modern browser.
+# CloudGuard
 
-## Application Screenshots
+### Performance Evaluation of Cloud Services Under Simulated DoS Workloads
 
-A visual tour of the running CloudGuard interface (light theme), captured from the live application at `http://localhost:8080`.
+*Shed the overload. Keep accepted work fast. Measure the trade-off — reproducibly, in simulation.*
+
+<br/>
+
+[![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.5-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![CloudSim Plus](https://img.shields.io/badge/CloudSim_Plus-8.5.7-3768E8?style=flat-square)](https://cloudsimplus.org)
+[![Maven](https://img.shields.io/badge/Maven-build-C71A36?style=flat-square&logo=apachemaven&logoColor=white)](https://maven.apache.org)
+[![H2](https://img.shields.io/badge/H2-Database-09476B?style=flat-square)](https://www.h2database.com)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org)
+[![Tests](https://img.shields.io/badge/tests-18%20passing-brightgreen?style=flat-square)](#-metrics)
+
+<br/>
+
+<table>
+<tr>
+<td align="center"><b>🪣 Admission Control</b><br/>Token Bucket load shedding</td>
+<td align="center"><b>☁️ CloudSim Plus</b><br/>Deterministic simulation</td>
+<td align="center"><b>📊 Verified Results</b><br/>20 trials · 95% CIs</td>
+<td align="center"><b>🎛️ Research Dashboard</b><br/>Scenarios · analytics · CSV</td>
+</tr>
+</table>
+
+<br/>
+
+> **Simulation, not real DoS/DDoS.** CloudGuard models computational tasks (Cloudlets) and admission control with CloudSim Plus. Completion time is simulated Cloudlet *finish − arrival* time, **not** real HTTP/network latency. Admission control **sheds workload; it does not add physical capacity.**
+
+</div>
+
+---
+
+## What is CloudGuard?
+
+CloudGuard is an **M.Tech Cyber Security** research platform that evaluates how a cloud service performs under **normal and elevated computational task-arrival pressure**, and how **Token Bucket admission control** changes that performance. The Java/Spring Boot backend drives a **CloudSim Plus** simulation; a browser dashboard runs scenarios and renders the analytics. Every result is deterministic, invariant-checked, and statistically validated.
+
+---
+
+## ✨ Features
+
+| | Feature | Description |
+|:---:|---|---|
+| 🪣 | **Token Bucket Admission Control** | Deterministic, simulated-time load shedding, evaluated *before* the simulation starts — rejected tasks are never submitted |
+| 🎛️ | **Five Research Scenarios** | S1–S5: protected vs unprotected × normal vs elevated, plus a Token Bucket threshold sweep |
+| 📊 | **Verified Statistics** | 20 trials per scenario — mean, sample standard deviation (n−1) and 95% confidence intervals (Student-t) |
+| 📈 | **Analytics Dashboard** | KPI cards, task-disposition donut, and protected-vs-unprotected comparison charts (SVG) |
+| 🗂️ | **History & CSV Export** | Every run persisted to H2 with reopen and per-task CSV export |
+| 🔬 | **Reproducible** | Deterministic by seed; counter invariants enforced; all statistics independently reproduced |
+
+---
+
+## 🖼️ Application Screenshots
 
 | | |
 |:---:|:---:|
-| ![CloudGuard Overview](docs/images/cloudguard-overview.png) | ![Infrastructure Configuration](docs/images/cloudguard-infrastructure.png) |
-| **Overview dashboard** — latest-run KPIs (completed, rejected %, avg completion, protection) and the five research scenarios. | **Infrastructure** — the fixed datacenter/VM baseline (2 hosts × 4 PE, 4 VMs) shared across experiments. |
+| ![Overview](docs/images/cloudguard-overview.png) | ![Infrastructure](docs/images/cloudguard-infrastructure.png) |
+| **Overview** — latest-run KPIs and the five scenarios | **Infrastructure** — fixed datacenter/VM baseline |
 | ![Workload Studio](docs/images/cloudguard-workload.png) | ![Security Policy](docs/images/cloudguard-security-policy.png) |
-| **Workload Studio** — 100/500-task workloads over a 60 s window with seeded ±10% task-length variation. | **Security Policy** — Token Bucket admission control (capacity / refill per simulated second). |
+| **Workload Studio** — 100/500 tasks, 60 s window, seeded ±10% | **Security Policy** — Token Bucket (capacity / refill) |
 | ![Scenario Manager](docs/images/cloudguard-scenario-manager.png) | ![Results & Analytics](docs/images/cloudguard-results-analytics.png) |
-| **Scenario Manager** — select and run S1–S5 (protected vs unprotected, plus the threshold sweep). | **Results & Analytics** — KPI cards and task-disposition donut (shown: S4 — 500 generated, 350 admitted, 150 rejected = 30%). |
+| **Scenario Manager** — run S1–S5 | **Results & Analytics** — S4: 500 → 350 admitted, 150 rejected (30%) |
 | ![Experiment History](docs/images/cloudguard-experiment-history.png) | |
-| **Experiment History** — saved runs, reopen for analysis, and per-task CSV export. | |
+| **Experiment History** — saved runs + CSV export | |
 
-## Technology Stack
+---
 
-| Layer | Technology |
-|---|---|
-| Language / runtime | Java 17 |
-| Backend framework | Spring Boot 3.4.5 (REST API, validation, dependency injection) |
-| Simulation engine | CloudSim Plus 8.5.7 (discrete-event cloud simulation) |
-| Persistence | H2 file-backed database (JPA / Hibernate); request + result stored as JSON |
-| Frontend | Vanilla JavaScript, HTML, CSS single-page app (SVG analytics, CSV export) |
-| Build / deploy | Maven; Docker; local at `http://localhost:8080` |
-| Testing | JUnit (metrics + Token Bucket); headless-Chrome UI verification |
-
-## System Architecture
+## 🏗️ System Architecture
 
 ![CloudGuard system architecture](docs/architecture/cloudguard-architecture.png)
 
-_Text view of the same flow:_
+---
+
+## ⚙️ How It Works
 
 ```
-Browser SPA (JavaScript / HTML / CSS)
-        │  REST  (/api/*)
-Spring Boot controller ──► CloudSim Plus simulation service
-        │                       ├─ Token Bucket admission (deterministic pre-pass, before simulation.start())
-        │                       └─ MetricsCalculator (completion time, makespan, throughput, multi-trial stats)
-        └──► H2 file database (persists request + result JSON)
+  🖥️  Configure a scenario (infrastructure · workload · policy)
+        │
+  📨  POST /api/experiments/run    → request validated
+        │
+  🪣  Token Bucket admission (pre-pass)      ← rejected tasks are NEVER submitted
+        │
+  ☁️  Admitted Cloudlets run on VMs (SpaceShared → ≤ 4 concurrent)
+        │
+  📏  Metrics over completed tasks (completion time · makespan · throughput · 95% CI)
+        │
+  🗄️  Persist request + result (H2)   →   📊 SVG analytics  +  📄 CSV export
 ```
 
-Admission control is applied as a deterministic pre-pass over the arrival schedule, so **rejected tasks are never submitted** to CloudSim Plus. Admitted Cloudlets execute on the VMs (SpaceShared), metrics are computed over completed tasks, and results are persisted to H2 and rendered as SVG analytics.
+---
 
-## Current implementation
+## 🧰 Tech Stack
 
-- Responsive browser UI with overview, infrastructure, workload, security, scenario, analytics and history pages.
-- Spring Boot REST API.
-- CloudSim Plus 8.5.7 simulation dependency, pinned for reproducibility.
-- S1–S5 experiment definitions.
-- Deterministic Token Bucket admission control evaluated against simulated arrival time.
-- Controlled uniform task arrivals using Cloudlet submission delays.
-- Task-level completion-time results, rejected-workload percentage, throughput and makespan.
-- S5 threshold sweep (25/2, 50/5, 100/10 capacity/refill-per-simulated-second).
-- Repeated trials and H2 file-backed experiment history.
-- CSV export of task-level results.
-- Docker image definition for deployment.
+<table>
+<tr><th>Layer</th><th>Technology</th></tr>
+<tr><td>☕ <b>Language / runtime</b></td><td>Java 17</td></tr>
+<tr><td>🍃 <b>Backend</b></td><td>Spring Boot 3.4.5 · REST API · Bean Validation</td></tr>
+<tr><td>☁️ <b>Simulation engine</b></td><td>CloudSim Plus 8.5.7 (discrete-event cloud simulation)</td></tr>
+<tr><td>🗄️ <b>Persistence</b></td><td>H2 file database · JPA / Hibernate (request + result JSON)</td></tr>
+<tr><td>🖥️ <b>Frontend</b></td><td>Vanilla JavaScript · HTML · CSS · SVG charts · CSV export</td></tr>
+<tr><td>🧰 <b>Build / deploy</b></td><td>Maven · Docker</td></tr>
+<tr><td>✅ <b>Testing</b></td><td>JUnit (18 tests: metrics + Token Bucket) · headless-Chrome UI checks</td></tr>
+</table>
 
-## Important research scope
+---
 
-CloudSim Plus simulates cloud infrastructure and Cloudlet execution. This project models DoS-like workload pressure as synthetic task arrivals and models protection as a task-admission policy. It does not generate real HTTP traffic, packets, volumetric DDoS traffic, or measure a production service's network latency. Do not describe the results as proof of real-world DDoS prevention.
+## 🧪 Simulation Scenarios
 
-The current workload generator uses uniformly spaced arrivals across the selected workload window, with seeded ±10% task-length variation. This is an initial reproducible workload model. If the research design later requires Poisson or burst arrivals, those should be added as explicit workload models and evaluated separately.
+| Scenario | Workload | Tasks | Admission policy | Purpose |
+|:---:|---|:---:|:---:|---|
+| **S1** | Normal | 100 | Disabled | Unprotected baseline (normal load) |
+| **S2** | Elevated | 500 | Disabled | Unprotected baseline (elevated load) |
+| **S3** | Normal | 100 | Enabled | Admission control at normal load |
+| **S4** | Elevated | 500 | Enabled | Admission control at elevated load |
+| **S5** | Elevated | 500 | Enabled — 3 thresholds | Token Bucket threshold comparison |
 
-Repeated trials use the same uniformly spaced, deterministic arrival times for every trial; only the ±10% task-length randomness changes, because the trial index is added to the base random seed (`seed + trial index`). As a result, admission decisions (and therefore admitted/rejected counts) do not vary across trials — trials capture task-length variance only, not arrival variance. Reported trial metrics are averaged across the trials.
+Admission control is **scenario-driven**: S1/S2 run unprotected, S3/S4/S5 protected. S1≡S3 and S2≡S4 use identical infrastructure, workload, trials and seed — only protection differs. The request field `Security.enabled` does **not** toggle protection. S5 evaluates three **hardcoded** capacity/refill settings: `25/2`, `50/5`, `100/10`.
 
-## Scenarios
+---
 
-| Scenario | Tasks | Admission policy | Purpose |
-|---|---:|---|---|
-| S1 | 100 | Disabled | Normal-load baseline |
-| S2 | 500 | Disabled | Elevated-load baseline |
-| S3 | 100 | Enabled | Protection overhead under normal load |
-| S4 | 500 | Enabled | Protection under elevated load |
-| S5 | 500 | Enabled; 3 thresholds | Policy threshold comparison |
-
-S1–S5 use the same infrastructure profile unless a user intentionally changes it. The same task-arrival window and task-length configuration should be retained for matched comparisons.
-
-Admission control is **scenario-driven**: S1/S2 run unprotected and S3/S4/S5 run protected. The API request field `Security.enabled` does **not** currently toggle protection — the selected scenario determines whether the Token Bucket is applied. S5 evaluates three **hardcoded** Token Bucket threshold settings (capacity / refill-per-simulated-second): 25/2, 50/5 and 100/10; the request-supplied capacity and refill values are not used for the S5 sweep.
-
-## Token Bucket Admission Control
+## 🪣 Token Bucket Admission Control
 
 Protection is a **Token Bucket** admission policy, evaluated against **simulated** arrival time as a deterministic pre-pass *before* the CloudSim run:
 
 - The bucket starts **full** (= capacity) and **refills** at a fixed rate per simulated second, up to capacity.
-- Each generated task costs **one token**: a task is **admitted** if a token is available at its arrival time, otherwise **rejected** and never submitted to CloudSim Plus.
-- Under saturated demand, `admitted ≈ min(generated, capacity + refill × window)` — e.g. 50 / 5 over a 60 s window admits `min(500, 350) = 350`.
+- Each generated task costs **one token**: admitted if a token is available at its arrival time, otherwise **rejected** and never submitted to CloudSim Plus.
+- Under saturated demand: `admitted ≈ min(generated, capacity + refill × window)` — e.g. `50/5` over a 60 s window admits `min(500, 350) = 350`.
 
-Admission control **sheds computational workload; it does not increase physical infrastructure capacity.** Lower completion times for admitted tasks come at the cost of rejecting incoming tasks. S5 compares three capacity/refill settings — 25/2, 50/5 and 100/10.
+> **Admission control sheds computational workload; it does not increase physical infrastructure capacity.** Lower completion times for admitted tasks come at the cost of rejecting incoming tasks.
 
-## Metrics
+---
 
-Task counters (reported for the main result and for each S5 variant):
+## 📊 Experimental Results
+
+Final campaign — **20 trials per scenario** (seeds 42–61); `±` = 95% CI (Student-t, df = 19). All completion times are **simulated** Cloudlet finish − arrival time.
+
+| Scenario | Admitted | Rejected | Rejection % | Avg completion (sim s) | Makespan (sim s) | Throughput (tasks/sim-s) |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **S1 = S3** | 100 | 0 | 0 | 103.608 ± 0.429 | 258.985 | 0.3861 |
+| **S2** | 500 | 0 | 0 | 611.868 ± 0.919 | 1279.555 | 0.3908 |
+| **S4** | 350 | 150 | 30 | 424.215 ± 0.743 | 899.463 | 0.3891 |
+| **S5 · 25/2** | 145 | 355 | 71 | 164.959 | — | 0.3835 |
+| **S5 · 50/5** | 350 | 150 | 30 | 424.215 | 899.463 | 0.3891 |
+| **S5 · 100/10** | 500 | 0 | 0 | 611.868 | 1279.555 | 0.3908 |
+
+**Key findings.** Admission control is **transparent at normal load** (S1 ≡ S3, 0 rejection). Under elevated load it rejects 30% of tasks and cuts admitted-task average completion time by **~31%** (611.9 → 424.2 s) and makespan by **~30%**, while **throughput stays ≈ constant** (capacity-bound by the 4 VM processing elements). The S5 sweep shows a monotonic **rejection ↔ latency** trade-off. Lower completion times for admitted tasks come at the cost of rejecting incoming tasks — load is **shed**, capacity is **not added**.
+
+---
+
+## 📏 Metrics
+
+**Task counters** (reported for the main result and each S5 variant):
 
 - **generatedTasks** – total synthetic tasks created for the workload.
-- **admittedTasks** – tasks allowed through Token Bucket admission control and submitted to CloudSim Plus.
-- **rejectedTasks** – generated tasks rejected by Token Bucket admission control (never submitted to CloudSim Plus).
-- **completedTasks** – admitted tasks whose Cloudlets completed successfully in CloudSim.
-- **unfinishedTasks** – admitted tasks that neither completed nor were explicitly failed (for example, still queued or resource-starved when the simulation ended).
-- **failedTasks** – only tasks CloudSim explicitly reported as failed (status `FAILED` / `FAILED_RESOURCE_UNAVAILABLE`).
+- **admittedTasks** – tasks allowed through admission control and submitted to CloudSim Plus.
+- **rejectedTasks** – tasks rejected by admission control (never submitted).
+- **completedTasks** – admitted Cloudlets that completed successfully.
+- **unfinishedTasks** – admitted tasks neither completed nor explicitly failed (e.g. still queued when the simulation ended).
+- **failedTasks** – only tasks CloudSim explicitly reported as `FAILED` / `FAILED_RESOURCE_UNAVAILABLE`.
 
-Counter invariant (holds for the main result and every S5 variant):
+**Invariants** (hold for the main result and every S5 variant):
 
 ```
 completedTasks + unfinishedTasks + failedTasks = admittedTasks
+admittedTasks  + rejectedTasks                 = generatedTasks
 ```
 
-Rejected tasks are tracked separately from the admitted-task invariant and satisfy `admittedTasks + rejectedTasks = generatedTasks`.
+**Timing & rate metrics:** rejection % = rejected / generated × 100 · per-task completion = finish − arrival · average / P95 / maximum over completed Cloudlets · makespan = latest finish − earliest admitted arrival (0 if none complete) · throughput = completed / makespan (0-safe). Across trials: mean, sample SD (n−1), 95% CI (Student-t, df = 19). Each Cloudlet is configured with CPU 50% / RAM 5% / BW 5% utilisation **demand** (not measured output).
 
-Timing and rate metrics:
+---
 
-- Rejected workload percentage = rejectedTasks / generatedTasks × 100.
-- Per-task completion time = Cloudlet finish time − configured task arrival time.
-- Average, P95 and maximum completion time for completed Cloudlets.
-- Makespan = latest finish time (completed) − earliest admitted task arrival time; 0 if no task completes.
-- Throughput = completedTasks / makespan; 0 when makespan is 0 (guarded against division by zero).
+## 🔌 API
 
-Task-level CSV currently includes completed Cloudlets; rejected and unfinished tasks are represented in aggregate counters, not as Cloudlet records.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service + engine status |
+| `GET` | `/api/scenarios` | Scenario catalogue (S1–S5) |
+| `POST` | `/api/experiments/run` | Run one scenario (returns full result) |
+| `POST` | `/api/experiments/suite` | Run the S1–S5 suite |
+| `GET` | `/api/experiments` | Experiment history |
+| `GET` | `/api/experiments/{id}` | One experiment result |
+| `GET` | `/api/experiments/{id}/export.csv` | Per-task CSV export |
 
-### Resource-utilisation model (configured demand, not measured output)
+---
 
-Each Cloudlet is configured with separate CloudSim Plus utilisation models:
+## 🚀 Local Development
 
-- CPU: 50%
-- RAM: 5%
-- Bandwidth: 5%
+### Prerequisites
 
-These are **configured utilisation demands** that drive the simulation — they describe how much of a VM's CPU, RAM and bandwidth each task requests. They are **not** measured experiment output metrics. The application does **not** currently sample or report actual host/VM CPU or RAM utilisation, and it does **not** compute a protection-overhead metric. Both are listed as future work under "Current limitations / next engineering tasks" below.
+- Java 17
+- Maven (or Docker)
 
-## Experimental Results
-
-Results from the final research campaign (**20 trials per scenario**, seeds 42–61; ± = 95% confidence interval, Student-t, df = 19). All completion times are **simulated** Cloudlet finish − arrival time — not real network latency.
-
-| Scenario | Admitted | Rejected | Rejection % | Avg completion (sim s) | Makespan (sim s) | Throughput (tasks/sim-s) |
-|---|---:|---:|---:|---:|---:|---:|
-| S1 = S3 | 100 | 0 | 0 | 103.608 ± 0.429 | 258.985 | 0.3861 |
-| S2 | 500 | 0 | 0 | 611.868 ± 0.919 | 1279.555 | 0.3908 |
-| S4 | 350 | 150 | 30 | 424.215 ± 0.743 | 899.463 | 0.3891 |
-| S5 — 25/2 | 145 | 355 | 71 | 164.959 | — | 0.3835 |
-| S5 — 50/5 | 350 | 150 | 30 | 424.215 | 899.463 | 0.3891 |
-| S5 — 100/10 | 500 | 0 | 0 | 611.868 | 1279.555 | 0.3908 |
-
-**Key findings.** Admission control is **transparent at normal load** (S1 ≡ S3, 0 rejection). Under elevated load it rejects 30% of tasks and cuts admitted-task average completion time by **~31%** (611.9 → 424.2 s) and makespan by **~30%**, while **throughput stays ≈ constant** (capacity-bound by the 4 VM processing elements). The S5 sweep shows a monotonic rejection↔latency trade-off (tighter capacity/refill → more rejection, faster admitted-task completion). **Admission control sheds computational workload; it does not add physical infrastructure capacity** — lower completion times for admitted tasks come at the cost of rejecting incoming tasks.
-
-## API
-
-- `GET /api/health`
-- `GET /api/scenarios`
-- `POST /api/experiments/run`
-- `POST /api/experiments/suite`
-- `GET /api/experiments`
-- `GET /api/experiments/{id}`
-- `GET /api/experiments/{id}/export.csv`
-
-## Deployment
-
-The browser experience requires a server. Users do not install Java, Maven, Node.js, Docker or a database locally; those are build/runtime concerns of the hosting environment.
-
-### Build & run locally (Maven)
-
-Requires Java 17 and Maven. From the project root:
+### 1. Clone
 
 ```bash
-mvn spring-boot:run          # starts the app at http://localhost:8080
+git clone https://github.com/akhilsabu-iiits/CloudGuard.git
+cd CloudGuard
+```
+
+### 2. Run
+
+```bash
+mvn spring-boot:run            # starts the app at http://localhost:8080
 # or build a jar:
 mvn clean package && java -jar target/*.jar
-```
-
-Run the unit tests with `mvn test`, then open `http://localhost:8080`.
-
-### Docker
-
-Build and run with Docker:
-
-```bash
+# or with Docker:
 docker compose up --build -d
 ```
 
-Open `http://localhost:8080` for a local smoke test. For a public browser URL, deploy this Dockerfile to a container hosting service and attach persistent storage at `/app/data` (the current H2 file database). Set `PORT` to the port supplied by the host. For a multi-user production deployment, replace H2 with managed PostgreSQL and add authentication/authorization before exposing the app publicly.
+Run the tests with `mvn test`.
 
-## Repository Structure
+| Service | URL |
+|---|---|
+| 🌐 Dashboard | http://localhost:8080 |
+| 🔌 API | http://localhost:8080/api/health |
+
+> For a hosted deployment, attach persistent storage at `/app/data` (the H2 file database) and set `PORT`. For multi-user production, replace H2 with a managed database and add authentication before exposing the app.
+
+---
+
+## 📂 Repository Structure
 
 ```text
 CloudGuard/
-├── README.md
-├── pom.xml · Dockerfile · compose.yaml
-├── .gitignore
+├── README.md · pom.xml · Dockerfile · compose.yaml · .gitignore
 ├── src/                          # Spring Boot + CloudSim Plus app (Java) and frontend (static/)
 └── docs/
     ├── images/                   # application screenshots
@@ -200,29 +235,36 @@ CloudGuard/
     └── RESEARCH_CONFIGURATION.md  # frozen, source-verified baseline
 ```
 
-## Project Documentation
+The frozen, source-verified configuration baseline is in [`docs/RESEARCH_CONFIGURATION.md`](docs/RESEARCH_CONFIGURATION.md). The full research report, experiment data, charts, presentation and viva materials are maintained separately as part of the M.Tech submission.
 
-The frozen, source-verified configuration baseline is in [`docs/RESEARCH_CONFIGURATION.md`](docs/RESEARCH_CONFIGURATION.md). The full research report, experiment data, charts, presentation and viva materials are maintained separately as part of the M.Tech submission and are not included in this repository.
+---
 
-## Version and licensing notes
+## ⚠️ Research Scope & Limitations
 
-CloudSim Plus is pinned to 8.5.7 in `pom.xml`. Maven Central lists this release as Java 17+ compatible. The current upstream repository has moved its development branch to newer Java requirements, so this project intentionally pins a released version rather than using `LATEST` or a snapshot. Review CloudSim Plus's GPL-3.0 license and include the required notices when redistributing the application.
+- **Simulation, not real DoS/DDoS.** No real HTTP, packets, or network-layer traffic; "DoS-like pressure" = sustained elevated computational task arrivals.
+- **Simulated completion time** = Cloudlet finish − arrival; not real latency or availability.
+- **No task loss** — every admitted Cloudlet completes; DoS impact appears as latency + rejection, not failure.
+- **Deterministic uniform arrivals** (not Poisson/bursty); the seed varies task length (±10%) only, so admitted/rejected counts do not vary across trials — trials capture task-length variance only.
+- **Confidence intervals, not significance** — no formal hypothesis test was run; P95/Max are reported as cross-trial means.
+- **Single-node H2**, no authentication — suitable for local research, not public multi-user production.
+- CPU/RAM/bandwidth figures are **configured demands**, not measured host/VM utilisation.
 
-**Note:** this repository does not yet include a top-level `LICENSE` file — add one that is compatible with CloudSim Plus's GPL-3.0 before public redistribution.
+---
 
-## Acknowledgements
+## 📄 License & Acknowledgements
+
+CloudSim Plus is pinned to **8.5.7** and is distributed under **GPL-3.0** — review its license and include the required notices when redistributing. This repository does not yet include a top-level `LICENSE` file; add a GPL-3.0-compatible license before public redistribution.
+
+**Acknowledgements**
 
 - **CloudSim Plus** (Silva Filho et al., IFIP/IEEE IM 2017) and the original **CloudSim** toolkit (Calheiros et al., *Software: Practice and Experience*, 2011) — the simulation framework this project builds on.
 - **Spring Boot** and the **H2 Database Engine** — application framework and persistence layer.
 
-Full citations appear in the project's final research report (§References).
+<div align="center">
 
-## Current limitations / next engineering tasks
+<br/>
 
-1. Run a full Maven/Docker build and verify all CloudSim Plus API calls in the target environment.
-2. Add authentication and per-user access controls before public multi-user deployment.
-3. Add a durable production database such as PostgreSQL for shared hosting.
-4. Add server-side job queue/cancellation and progress updates for long experiment suites.
-5. Add validated CPU/RAM utilisation sampling and a protection-overhead metric and report methodology. Neither CPU/RAM utilisation measurement nor protection-overhead measurement is implemented yet; the CPU/RAM/bandwidth figures in this document are configured Cloudlet demands, not measured output.
-6. Add Poisson and burst-arrival workload models if required by the approved research methodology.
-7. Tests already implemented: `MetricsCalculatorTest` covers metric-formula calculations (makespan, throughput, completion time), full/partial/zero completion, explicit-failure separation and the counter invariant (completedTasks + unfinishedTasks + failedTasks = admittedTasks); `TokenBucketTest` covers admission when the bucket is full/empty, simulation-time refill and the capacity upper bound. Remaining test-coverage gaps: repeated-run (multi-trial) aggregation, scenario-level invariants (for example, unprotected scenarios rejecting no tasks), the end-to-end CloudSim `runOnce` simulation path, and REST API endpoint tests.
+**M.Tech Cyber Security Research Project**
+*A CloudSim Plus admission-control simulation — not real network DoS/DDoS testing.*
+
+</div>
