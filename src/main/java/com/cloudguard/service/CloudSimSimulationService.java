@@ -1,7 +1,6 @@
 package com.cloudguard.service;
 
 import com.cloudguard.model.ExperimentResult;
-import com.cloudguard.model.MonitoringData;
 import com.cloudguard.model.RunRequest;
 import org.cloudsimplus.brokers.DatacenterBrokerSimple;
 import org.cloudsimplus.cloudlets.Cloudlet;
@@ -27,10 +26,7 @@ public class CloudSimSimulationService {
                           double completionRatePercent,
                           Map<String, ExperimentResult.AggregateStat> statistics,
                           List<ExperimentResult.TrialSummary> trialSummaries,
-                          List<ExperimentResult.TaskResult> tasks,
-                          MonitoringData monitoring) {}
-    /** Experiment result plus its monitoring time-series (persisted separately). */
-    public record RunOutput(ExperimentResult result, MonitoringData monitoring) {}
+                          List<ExperimentResult.TaskResult> tasks) {}
 
     public List<Scenario> scenarios() {
         return List.of(
@@ -42,7 +38,7 @@ public class CloudSimSimulationService {
         );
     }
 
-    public RunOutput run(String experimentId, String scenarioId, RunRequest request) {
+    public ExperimentResult run(String experimentId, String scenarioId, RunRequest request) {
         Scenario scenario = scenarios().stream().filter(s -> s.id().equalsIgnoreCase(scenarioId)).findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Unknown scenario: " + scenarioId));
         RunRequest.Infrastructure infra = request.infrastructure() == null ? defaultsInfra() : request.infrastructure();
@@ -65,7 +61,7 @@ public class CloudSimSimulationService {
             int[][] settings = {{25, 2}, {50, 5}, {100, 10}};
             OneRun[] results = new OneRun[settings.length];
             for (int i=0; i<settings.length; i++) {
-                results[i] = runTrials(infra, taskCount, duration, taskLength, seed, true, settings[i][0], settings[i][1], trials, experimentId, scenario.id());
+                results[i] = runTrials(infra, taskCount, duration, taskLength, seed, true, settings[i][0], settings[i][1], trials);
                 OneRun r = results[i];
                 variants.add(new ExperimentResult.VariantResult("Capacity " + settings[i][0] + " / refill " + settings[i][1],
                     settings[i][0], settings[i][1], r.admitted(), r.rejected(), pct(r.rejected(), r.generated()),
@@ -74,10 +70,10 @@ public class CloudSimSimulationService {
             }
             main = results[1]; bucket = 50; refill = 5;
         } else {
-            main = runTrials(infra, taskCount, duration, taskLength, seed, protectedMode, bucket, refill, trials, experimentId, scenario.id());
+            main = runTrials(infra, taskCount, duration, taskLength, seed, protectedMode, bucket, refill, trials);
         }
 
-        ExperimentResult result = new ExperimentResult(experimentId, scenario.id(), scenario.name(), Instant.now(), "COMPLETED",
+        return new ExperimentResult(experimentId, scenario.id(), scenario.name(), Instant.now(), "COMPLETED",
             main.generated(), main.admitted(), main.rejected(), pct(main.rejected(), main.generated()),
             main.completed(), main.unfinished(), main.explicitlyFailed(), main.completionRatePercent(),
             main.avg(), main.p95(), main.max(), main.makespan(), main.throughput(),
@@ -85,13 +81,12 @@ public class CloudSimSimulationService {
             main.statistics(), main.trialSummaries(),
             main.tasks(), variants,
             "CloudSim Plus models datacenter/host/VM task execution. Synthetic DoS-like pressure is represented as controlled Cloudlet arrivals; this is not real HTTP or network-layer DDoS traffic.");
-        return new RunOutput(result, main.monitoring());
     }
 
     private OneRun runTrials(RunRequest.Infrastructure infra, int count, int duration, long length, long seed,
-                             boolean protectedMode, int capacity, int refill, int trials, String experimentId, String scenarioId) {
+                             boolean protectedMode, int capacity, int refill, int trials) {
         List<OneRun> runs = new ArrayList<>();
-        for (int t=0; t<trials; t++) runs.add(runOnce(infra, count, duration, length, seed + t, protectedMode, capacity, refill, experimentId, scenarioId));
+        for (int t=0; t<trials; t++) runs.add(runOnce(infra, count, duration, length, seed + t, protectedMode, capacity, refill));
         OneRun last = runs.get(runs.size()-1);
         // Derive unfinished from admitted so the invariant holds exactly even after averaging across trials.
         int admitted = last.admitted();
@@ -122,7 +117,7 @@ public class CloudSimSimulationService {
             completed, unfinished, explicitlyFailed,
             avg(runs, OneRun::avg), avg(runs, OneRun::p95), avg(runs, OneRun::max),
             avg(runs, OneRun::makespan), avg(runs, OneRun::throughput),
-            completionRate, stats, summaries, last.tasks(), last.monitoring());
+            completionRate, stats, summaries, last.tasks());
     }
 
     private double avg(List<OneRun> runs, java.util.function.ToDoubleFunction<OneRun> f) {
@@ -136,7 +131,7 @@ public class CloudSimSimulationService {
     }
 
     private OneRun runOnce(RunRequest.Infrastructure i, int taskCount, int duration, long taskLength,
-                           long seed, boolean protectedMode, int capacity, int refill, String experimentId, String scenarioId) {
+                           long seed, boolean protectedMode, int capacity, int refill) {
         CloudSimPlus simulation = new CloudSimPlus();
         List<HostSimple> hosts = new ArrayList<>();
         for (int h=0; h<value(i.hosts(),2); h++) {
@@ -170,36 +165,15 @@ public class CloudSimSimulationService {
         }
         TokenBucket bucket = protectedMode ? new TokenBucket(capacity, refill) : null;
         List<Cloudlet> admitted = new ArrayList<>();
-        // Monitoring: one real sample per generated task at its arrival time (admission behaviour unchanged).
-        List<MonitoringData.WorkloadSample> workloadSamples = new ArrayList<>();
-        int genCum = 0, admCum = 0, rejCum = 0;
-        double replenishedCum = 0;
         for (Arrival a : arrivals) {
-            genCum++;
-            boolean ok;
-            Double tokensAvailable = null, tokensReplenished = null;
-            if (protectedMode) {
-                double before = bucket.getTokens();
-                ok = bucket.tryAcquire(a.time(), 1.0);                 // unchanged admission decision
-                double after = bucket.getTokens();
-                replenishedCum += Math.max(0, (after + (ok ? 1.0 : 0.0)) - before);
-                tokensAvailable = after;
-                tokensReplenished = replenishedCum;
-            } else {
-                ok = true;
-            }
-            if (ok) {
-                admCum++;
+            if (!protectedMode || bucket.tryAcquire(a.time(), 1.0)) {
                 CloudletSimple cloudlet = new CloudletSimple(a.length(), 1);
                 cloudlet.setUtilizationModelCpu(new UtilizationModelDynamic(0.5));
                 cloudlet.setUtilizationModelRam(new UtilizationModelDynamic(0.05));
                 cloudlet.setUtilizationModelBw(new UtilizationModelDynamic(0.05));
                 cloudlet.setSubmissionDelay(a.time());
                 admitted.add(cloudlet);
-            } else {
-                rejCum++;
             }
-            workloadSamples.add(new MonitoringData.WorkloadSample(a.time(), genCum, admCum, rejCum, tokensAvailable, tokensReplenished));
         }
         broker.submitCloudletList(admitted);
         simulation.start();
@@ -207,14 +181,12 @@ public class CloudSimSimulationService {
         List<Cloudlet> finished = broker.getCloudletFinishedList();
         List<ExperimentResult.TaskResult> taskResults = new ArrayList<>();
         List<MetricsCalculator.Completion> completions = new ArrayList<>();
-        List<MonitoringCollector.Exec> execs = new ArrayList<>();
         for (Cloudlet c : finished) {
             double arrival = c.getSubmissionDelay();
             double finish = c.getFinishTime();
             double start = c.getStartTime();
             double completion = Math.max(0, finish - arrival);
             completions.add(new MetricsCalculator.Completion(arrival, finish));
-            execs.add(new MonitoringCollector.Exec(arrival, start, finish, (int) c.getVm().getId()));
             taskResults.add(new ExperimentResult.TaskResult(c.getId(), arrival, start, finish, completion, c.getStatus().toString()));
         }
         // Only CloudSim-reported failures count as "explicitly failed"; other non-finished admitted tasks are "unfinished".
@@ -227,30 +199,11 @@ public class CloudSimSimulationService {
             : admitted.stream().mapToDouble(Cloudlet::getSubmissionDelay).min().orElse(0);
         MetricsCalculator.Metrics m = MetricsCalculator.compute(admitted.size(), minAdmittedArrival, completions, explicitlyFailed);
         double completionRate = MetricsCalculator.completionRate(m.completed(), admitted.size());
-
-        // Build monitoring time-series from the real event data captured above.
-        int vmCount = value(i.vmCount(), 4);
-        List<String> notes = new ArrayList<>();
-        notes.add("Series are built from real CloudSim event timestamps (task arrival/start/finish) and Token Bucket state at each arrival; no values are interpolated or fabricated.");
-        notes.add("Simulated time is CloudSim virtual time and is independent of wall-clock execution speed.");
-        if (!protectedMode) notes.add("Unprotected scenario: no Token Bucket is applied, so token series are not available.");
-        notes.add("VM waiting/running/completed series are derived from completed cloudlets' real start/finish times; tasks that never finished are not represented in these series.");
-        MonitoringData monitoring = new MonitoringData(experimentId, scenarioId, protectedMode,
-            protectedMode ? capacity : null, protectedMode ? refill : null,
-            duration, m.makespan(), vmCount,
-            MonitoringCollector.downsample(workloadSamples, 300),
-            MonitoringCollector.buildVmSamples(execs, vmCount, 300),
-            MonitoringCollector.buildThroughput(execs, m.makespan(), 24),
-            MonitoringCollector.perVmCompleted(execs, vmCount),
-            new MonitoringData.FinalCounters(taskCount, admitted.size(), taskCount - admitted.size(),
-                m.completed(), m.unfinished(), m.explicitlyFailed()),
-            notes);
-
         return new OneRun(taskCount, admitted.size(), taskCount - admitted.size(),
             m.completed(), m.unfinished(), m.explicitlyFailed(),
             m.averageCompletionTime(), m.p95CompletionTime(), m.maxCompletionTime(),
             m.makespan(), m.throughput(),
-            completionRate, Map.of(), List.of(), taskResults, monitoring);
+            completionRate, Map.of(), List.of(), taskResults);
     }
 
     private double pct(int n, int total) { return total == 0 ? 0 : 100.0*n/total; }

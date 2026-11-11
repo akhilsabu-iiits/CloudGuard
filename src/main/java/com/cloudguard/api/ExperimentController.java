@@ -1,7 +1,6 @@
 package com.cloudguard.api;
 
 import com.cloudguard.model.ExperimentResult;
-import com.cloudguard.model.MonitoringData;
 import com.cloudguard.model.RunRequest;
 import com.cloudguard.persistence.ExperimentEntity;
 import com.cloudguard.persistence.ExperimentRepository;
@@ -40,9 +39,9 @@ public class ExperimentController {
     @PostMapping("/experiments/run")
     public ExperimentResult run(@Valid @RequestBody RunRequest request) throws Exception {
         if (request.scenarioId()==null || request.scenarioId().isBlank()) throw new IllegalArgumentException("scenarioId is required");
-        CloudSimSimulationService.RunOutput out = simulator.run(UUID.randomUUID().toString(), request.scenarioId(), request);
-        persist(out.result(), out.monitoring(), request);
-        return out.result();
+        ExperimentResult result = simulator.run(UUID.randomUUID().toString(), request.scenarioId(), request);
+        persist(result, request);
+        return result;
     }
 
     @PostMapping("/experiments/suite")
@@ -52,9 +51,9 @@ public class ExperimentController {
             RunRequest suiteRequest = new RunRequest(id, request.infrastructure(),
                 request.workload()==null ? null : new RunRequest.Workload(null, request.workload().durationSeconds(), request.workload().taskLengthMi(), request.workload().randomSeed()),
                 request.security(), request.trials());
-            CloudSimSimulationService.RunOutput out = simulator.run(UUID.randomUUID().toString(), id, suiteRequest);
-            persist(out.result(), out.monitoring(), suiteRequest);
-            results.add(out.result());
+            ExperimentResult result = simulator.run(UUID.randomUUID().toString(), id, suiteRequest);
+            persist(result, suiteRequest);
+            results.add(result);
         }
         return results;
     }
@@ -85,17 +84,8 @@ public class ExperimentController {
             .contentType(new MediaType("text","csv", StandardCharsets.UTF_8)).body(csv.toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    @GetMapping("/experiments/{id}/monitoring")
-    public ResponseEntity<String> monitoring(@PathVariable String id) {
-        ExperimentEntity e = repository.findById(id).orElseThrow(() -> new NoSuchElementException("Experiment not found"));
-        String mj = e.getMonitoringJson();
-        String body = (mj == null || mj.isBlank()) ? "{\"available\":false}" : mj;
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(body);
-    }
-
-    private void persist(ExperimentResult result, MonitoringData monitoring, RunRequest request) throws Exception {
+    private void persist(ExperimentResult result, RunRequest request) throws Exception {
         repository.save(new ExperimentEntity(result.experimentId(), result.scenarioId(), result.scenarioName(),
-            result.createdAt(), result.status(), mapper.writeValueAsString(request), mapper.writeValueAsString(result),
-            monitoring == null ? null : mapper.writeValueAsString(monitoring)));
+            result.createdAt(), result.status(), mapper.writeValueAsString(request), mapper.writeValueAsString(result)));
     }
 }
