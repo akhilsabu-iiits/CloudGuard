@@ -148,7 +148,7 @@ Results from the final research campaign (**20 trials per scenario**, seeds 42�
 | S5 — 50/5 | 350 | 150 | 30 | 424.215 | 899.463 | 0.3891 |
 | S5 — 100/10 | 500 | 0 | 0 | 611.868 | 1279.555 | 0.3908 |
 
-**Key findings.** Admission control is **transparent at normal load** (S1 ≡ S3, 0 rejection). Under elevated load it rejects 30% of tasks and cuts admitted-task average completion time by **~31%** (611.9 → 424.2 s) and makespan by **~30%**, while **throughput stays ≈ constant** (capacity-bound by the 4 VM processing elements). The S5 sweep shows a monotonic rejection↔latency trade-off (tighter capacity/refill → more rejection, faster admitted-task completion). **Admission control sheds computational workload; it does not add physical infrastructure capacity** — lower completion times for admitted tasks come at the cost of rejecting incoming tasks. Full analysis, charts and independent statistical validation are in [`research/`](research/).
+**Key findings.** Admission control is **transparent at normal load** (S1 ≡ S3, 0 rejection). Under elevated load it rejects 30% of tasks and cuts admitted-task average completion time by **~31%** (611.9 → 424.2 s) and makespan by **~30%**, while **throughput stays ≈ constant** (capacity-bound by the 4 VM processing elements). The S5 sweep shows a monotonic rejection↔latency trade-off (tighter capacity/refill → more rejection, faster admitted-task completion). **Admission control sheds computational workload; it does not add physical infrastructure capacity** — lower completion times for admitted tasks come at the cost of rejecting incoming tasks.
 
 ## API
 
@@ -194,31 +194,15 @@ CloudGuard/
 ├── pom.xml · Dockerfile · compose.yaml
 ├── .gitignore
 ├── src/                          # Spring Boot + CloudSim Plus app (Java) and frontend (static/)
-├── docs/
-│   ├── images/                   # application screenshots
-│   ├── architecture/             # architecture diagram (SVG + PNG)
-│   └── RESEARCH_CONFIGURATION.md  # frozen, source-verified baseline
-└── research/
-    ├── report/                   # final report, analysis, limitations, validation, audits
-    ├── experiments/
-    │   ├── experimental-configuration.md
-    │   ├── results/              # raw API responses (raw/) + summary.json
-    │   ├── charts/               # SVG charts (+ png/)
-    │   └── exports/              # per-task CSV exports
-    ├── presentation/             # .pptx + speaker notes + outline
-    └── viva/                     # 50 Q&A, demo script, revision sheet, examiner challenges
+└── docs/
+    ├── images/                   # application screenshots
+    ├── architecture/             # architecture diagram (SVG + PNG)
+    └── RESEARCH_CONFIGURATION.md  # frozen, source-verified baseline
 ```
 
 ## Project Documentation
 
-Verified research deliverables (with independent statistical validation) live under [`research/`](research/):
-
-- **Report & analysis** — [`research/report/`](research/report/): `final-research-report.md` (abstract → references), `experiment-results.md`, `comparative-analysis.md`, `campaign-validation.md`, `research-limitations.md`, `academic-readiness-audit.md`, `academic-corrections-report.md`.
-- **Experiments** — [`research/experiments/`](research/experiments/): `experimental-configuration.md`, `results/` (raw API responses + `summary.json`), `charts/` (SVG + PNG), `exports/` (per-task CSV).
-- **Presentation** — [`research/presentation/`](research/presentation/): `CloudGuard_Final_MTech_Presentation.pptx`, `presentation-speaker-notes.md`, `presentation-outline.md`.
-- **Viva kit** — [`research/viva/`](research/viva/): 50 Q&A, a 10-minute demo script, a quick-revision sheet, and an examiner-challenge set.
-
-The frozen, source-verified configuration baseline is in [`docs/RESEARCH_CONFIGURATION.md`](docs/RESEARCH_CONFIGURATION.md).
+The frozen, source-verified configuration baseline is in [`docs/RESEARCH_CONFIGURATION.md`](docs/RESEARCH_CONFIGURATION.md). The full research report, experiment data, charts, presentation and viva materials are maintained separately as part of the M.Tech submission and are not included in this repository.
 
 ## Version and licensing notes
 
@@ -231,7 +215,7 @@ CloudSim Plus is pinned to 8.5.7 in `pom.xml`. Maven Central lists this release 
 - **CloudSim Plus** (Silva Filho et al., IFIP/IEEE IM 2017) and the original **CloudSim** toolkit (Calheiros et al., *Software: Practice and Experience*, 2011) — the simulation framework this project builds on.
 - **Spring Boot** and the **H2 Database Engine** — application framework and persistence layer.
 
-Full citations are in [`research/report/final-research-report.md`](research/report/final-research-report.md) (§References).
+Full citations appear in the project's final research report (§References).
 
 ## Current limitations / next engineering tasks
 

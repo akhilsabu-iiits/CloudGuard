@@ -36,3 +36,6 @@ secrets.*
 # --- Transient browser profiles / test artifacts (not part of the repo) ---
 chrome-prof*/
 screenshots-tmp/
+
+# Research deliverables kept locally / in the M.Tech submission, not in the repo
+research/
