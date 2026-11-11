@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#101a30"><meta name="description" content="CloudGuard cloud security simulation and performance evaluation platform">
-  <title>CloudGuard | Cloud Security Lab</title><link rel="stylesheet" href="/styles.css?v=7">
+  <title>CloudGuard | Cloud Security Lab</title><link rel="stylesheet" href="/styles.css?v=9">
 </head>
 <body>
 <div class="app-shell">
@@ -22,7 +22,7 @@
     <div class="sidebar-bottom"><div class="engine-status"><i></i><div><b>Simulation engine</b><small id="engineStatus">Checking connection…</small></div></div><div class="sidebar-foot">M.Tech Cyber Security Project<br>CloudSim Plus · Research workspace</div></div>
   </aside>
   <main class="main">
-    <header class="topbar"><button class="mobile-menu" id="mobileMenu">☰</button><div class="crumb">CloudGuard <span>/</span> <b id="pageCrumb">Overview</b></div><div class="top-right"><span class="server-pill"><i></i> Local workspace</span><div class="avatar">CG</div></div></header>
+    <header class="topbar"><button class="mobile-menu" id="mobileMenu">☰</button><div class="crumb">CloudGuard <span>/</span> <b id="pageCrumb">Overview</b></div><div class="top-right"><button class="btn-reset" id="resetDemo" type="button" aria-haspopup="dialog" aria-label="Reset demo"><span class="btn-reset-ico" aria-hidden="true">↻</span><span class="btn-reset-txt">Reset demo</span></button><span class="server-pill"><i></i> Local workspace</span><div class="avatar">CG</div></div></header>
     <section class="content" id="content">
       <div class="page-heading"><div><div class="eyebrow">RESEARCH CONTROL CENTER</div><h1>Simulation overview</h1><p>Evaluate cloud service resilience under synthetic workload pressure.</p></div><button class="btn btn-primary" data-goto="scenarios">＋ New experiment</button></div>
       <div class="metric-grid">
@@ -41,5 +41,12 @@
   </main>
 </div>
 <div class="toast" id="toast" role="status"></div>
-<script src="/app.js?v=8"></script>
+<div class="modal-overlay" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle" aria-describedby="resetModalDesc" hidden>
+  <div class="modal-card">
+    <h2 class="modal-title" id="resetModalTitle">Reset demo</h2>
+    <p class="modal-desc" id="resetModalDesc">This will reset the dashboard to its initial demonstration state. Your saved experiments and database records will not be deleted.</p>
+    <div class="modal-actions"><button class="btn btn-secondary" id="resetCancel" type="button">Cancel</button><button class="btn btn-primary" id="resetConfirm" type="button">Reset demo</button></div>
+  </div>
+</div>
+<script src="/app.js?v=9"></script>
 </body></html>
