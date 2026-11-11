@@ -6,12 +6,16 @@ import com.cloudguard.persistence.ExperimentEntity;
 import com.cloudguard.persistence.ExperimentRepository;
 import com.cloudguard.service.CloudSimSimulationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
@@ -22,6 +26,9 @@ public class ExperimentController {
     private final CloudSimSimulationService simulator;
     private final ExperimentRepository repository;
     private final ObjectMapper mapper;
+    // Serializes experiment persistence (run/suite) against the destructive reset so no record
+    // can be inserted while the database is being cleared.
+    private final Object persistLock = new Object();
 
     public ExperimentController(CloudSimSimulationService simulator, ExperimentRepository repository, ObjectMapper mapper) {
         this.simulator=simulator; this.repository=repository; this.mapper=mapper;
@@ -89,8 +96,42 @@ public class ExperimentController {
             .contentType(new MediaType("text","csv", StandardCharsets.UTF_8)).body(csv.toString().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Destructive demo reset: permanently deletes ALL experiment rows (not the DB file or schema).
+     * Restricted to the local demonstration environment (loopback only) and requires an exact
+     * confirmation phrase. Serialized against persistence so no record can be inserted mid-wipe.
+     */
+    @PostMapping("/experiments/reset")
+    @Transactional
+    public ResponseEntity<Map<String,Object>> reset(@RequestBody(required = false) Map<String,String> body,
+                                                     HttpServletRequest request) {
+        // getRemoteAddr() is the direct socket peer; forwarded headers (X-Forwarded-For) are never trusted.
+        if (!isLoopback(request.getRemoteAddr()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Reset is permitted only from the local demonstration environment."));
+        String confirm = body == null ? null : body.get("confirm");
+        if (!"DELETE ALL DATA".equals(confirm))
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Confirmation phrase mismatch. Type exactly: DELETE ALL DATA"));
+        long deleted, remaining;
+        synchronized (persistLock) {
+            deleted = repository.count();
+            repository.deleteAll();
+            remaining = repository.count();
+        }
+        return ResponseEntity.ok(Map.of("deleted", deleted, "remaining", remaining));
+    }
+
+    private static boolean isLoopback(String addr) {
+        if (addr == null) return false;
+        try { return InetAddress.getByName(addr).isLoopbackAddress(); }
+        catch (Exception e) { return "127.0.0.1".equals(addr) || "::1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr); }
+    }
+
     private void persist(ExperimentResult result, RunRequest request) throws Exception {
-        repository.save(new ExperimentEntity(result.experimentId(), result.scenarioId(), result.scenarioName(),
-            result.createdAt(), result.status(), mapper.writeValueAsString(request), mapper.writeValueAsString(result)));
+        synchronized (persistLock) {
+            repository.save(new ExperimentEntity(result.experimentId(), result.scenarioId(), result.scenarioName(),
+                result.createdAt(), result.status(), mapper.writeValueAsString(request), mapper.writeValueAsString(result)));
+        }
     }
 }
