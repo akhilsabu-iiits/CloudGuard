@@ -1,7 +1,38 @@
+# --- Build output ---
 target/
-# Local H2 database files and lock/temp artifacts (keep the data/ folder, ignore its contents)
+*.class
+
+# --- Local H2 database files and lock/temp artifacts (keep the data/ folder, ignore its contents) ---
 data/*
 !data/.gitkeep
+*.mv.db
+*.trace.db
+
+# --- Logs & temporary files ---
+*.log
+*.tmp
+*.bak
+*.swp
+
+# --- IDE / editor ---
 .idea/
 .vscode/
-*.log
+*.iml
+*.ipr
+*.iws
+
+# --- OS-generated files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Local secrets / environment (never commit credentials or tokens) ---
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# --- Transient browser profiles / test artifacts (not part of the repo) ---
+chrome-prof*/
+screenshots-tmp/
