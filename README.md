@@ -259,12 +259,3 @@ CloudSim Plus is pinned to **8.5.7** and is distributed under **GPL-3.0** — re
 
 - **CloudSim Plus** (Silva Filho et al., IFIP/IEEE IM 2017) and the original **CloudSim** toolkit (Calheiros et al., *Software: Practice and Experience*, 2011) — the simulation framework this project builds on.
 - **Spring Boot** and the **H2 Database Engine** — application framework and persistence layer.
-
-<div align="center">
-
-<br/>
-
-**M.Tech Cyber Security Research Project**
-*A CloudSim Plus admission-control simulation — not real network DoS/DDoS testing.*
-
-</div>
