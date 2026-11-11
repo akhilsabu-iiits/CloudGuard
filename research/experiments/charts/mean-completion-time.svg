@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" font-family="DM Sans,Arial,sans-serif">
+<rect width="720" height="420" fill="#ffffff"/>
+<text x="360" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d45">Mean simulated task completion time by scenario</text>
+<text x="360" y="48" text-anchor="middle" font-size="11" fill="#6b7a90">20 trials each; error bars = 95% CI (Student-t, df=19). Simulated Cloudlet finish-arrival, not real latency.</text>
+<line x1="70" y1="350.0" x2="700" y2="350.0" stroke="#eef1f6"/>
+<text x="62" y="354.0" text-anchor="end" font-size="10" fill="#9aa6b8">0.0</text>
+<line x1="70" y1="280.0" x2="700" y2="280.0" stroke="#eef1f6"/>
+<text x="62" y="284.0" text-anchor="end" font-size="10" fill="#9aa6b8">176.2</text>
+<line x1="70" y1="210.0" x2="700" y2="210.0" stroke="#eef1f6"/>
+<text x="62" y="214.0" text-anchor="end" font-size="10" fill="#9aa6b8">352.4</text>
+<line x1="70" y1="140.0" x2="700" y2="140.0" stroke="#eef1f6"/>
+<text x="62" y="144.0" text-anchor="end" font-size="10" fill="#9aa6b8">528.5</text>
+<line x1="70" y1="70.0" x2="700" y2="70.0" stroke="#eef1f6"/>
+<text x="62" y="74.0" text-anchor="end" font-size="10" fill="#9aa6b8">704.7</text>
+<line x1="70" y1="350" x2="700" y2="350" stroke="#d9e0ea"/>
+<rect x="98.0" y="308.8" width="70.0" height="41.2" fill="#8491a3" rx="3"/>
+<text x="133.0" y="302.8" text-anchor="middle" font-size="11" font-weight="700" fill="#45556e">103.6</text>
+<line x1="133.0" y1="308.7" x2="133.0" y2="309.0" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="128.0" y1="308.7" x2="138.0" y2="308.7" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="128.0" y1="309.0" x2="138.0" y2="309.0" stroke="#1f2d45" stroke-width="1.3"/>
+<text x="133.0" y="368.0" text-anchor="middle" font-size="11" fill="#55657d">S1</text>
+<rect x="224.0" y="106.9" width="70.0" height="243.1" fill="#e99435" rx="3"/>
+<text x="259.0" y="100.9" text-anchor="middle" font-size="11" font-weight="700" fill="#45556e">611.9</text>
+<line x1="259.0" y1="106.5" x2="259.0" y2="107.3" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="254.0" y1="106.5" x2="264.0" y2="106.5" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="254.0" y1="107.3" x2="264.0" y2="107.3" stroke="#1f2d45" stroke-width="1.3"/>
+<text x="259.0" y="368.0" text-anchor="middle" font-size="11" fill="#55657d">S2</text>
+<rect x="350.0" y="308.8" width="70.0" height="41.2" fill="#1a9a70" rx="3"/>
+<text x="385.0" y="302.8" text-anchor="middle" font-size="11" font-weight="700" fill="#45556e">103.6</text>
+<line x1="385.0" y1="308.7" x2="385.0" y2="309.0" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="380.0" y1="308.7" x2="390.0" y2="308.7" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="380.0" y1="309.0" x2="390.0" y2="309.0" stroke="#1f2d45" stroke-width="1.3"/>
+<text x="385.0" y="368.0" text-anchor="middle" font-size="11" fill="#55657d">S3</text>
+<rect x="476.0" y="181.4" width="70.0" height="168.6" fill="#3768e8" rx="3"/>
+<text x="511.0" y="175.4" text-anchor="middle" font-size="11" font-weight="700" fill="#45556e">424.2</text>
+<line x1="511.0" y1="181.2" x2="511.0" y2="181.7" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="506.0" y1="181.2" x2="516.0" y2="181.2" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="506.0" y1="181.7" x2="516.0" y2="181.7" stroke="#1f2d45" stroke-width="1.3"/>
+<text x="511.0" y="368.0" text-anchor="middle" font-size="11" fill="#55657d">S4</text>
+<rect x="602.0" y="181.4" width="70.0" height="168.6" fill="#8058e8" rx="3"/>
+<text x="637.0" y="175.4" text-anchor="middle" font-size="11" font-weight="700" fill="#45556e">424.2</text>
+<line x1="637.0" y1="181.2" x2="637.0" y2="181.7" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="632.0" y1="181.2" x2="642.0" y2="181.2" stroke="#1f2d45" stroke-width="1.3"/>
+<line x1="632.0" y1="181.7" x2="642.0" y2="181.7" stroke="#1f2d45" stroke-width="1.3"/>
+<text x="637.0" y="368.0" text-anchor="middle" font-size="11" fill="#55657d">S5</text>
+<text x="18" y="210.0" text-anchor="middle" font-size="10" fill="#6b7a90" transform="rotate(-90 18 210.0)">seconds (simulated)</text>
+</svg>
