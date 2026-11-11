@@ -45,7 +45,7 @@ CloudGuard evaluates how a cloud service performs under **normal and elevated co
 | | |
 |:---:|:---:|
 | ![Overview](docs/images/cloudguard-overview.png) | ![Results & Analytics](docs/images/cloudguard-results-analytics.png) |
-| **Overview** — latest-run KPIs and scenarios | **Results** — S4: 500 → 350 admitted, 150 rejected (30%) |
+| **Overview** — latest-run KPIs and scenarios | **Analytics** — S4: 500 → 350 admitted, 150 rejected (30%) |
 | ![Scenario Manager](docs/images/cloudguard-scenario-manager.png) | ![Experiment History](docs/images/cloudguard-experiment-history.png) |
 | **Scenario Manager** — run S1–S5 | **History** — saved runs + CSV export |
 
@@ -71,19 +71,6 @@ CloudGuard evaluates how a cloud service performs under **normal and elevated co
 
 ---
 
-## 🧰 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| ☕ Language | Java 17 |
-| 🍃 Backend | Spring Boot 3.4.5 · REST API |
-| ☁️ Simulation | CloudSim Plus 8.5.7 |
-| 🗄️ Persistence | H2 file database · JPA / Hibernate |
-| 🖥️ Frontend | Vanilla JS · HTML · CSS · SVG charts |
-| 🧰 Build / deploy | Maven · Docker |
-
----
-
 ## 🧪 Scenarios
 
 | Scenario | Workload | Tasks | Admission control | Purpose |
@@ -98,16 +85,16 @@ S1≡S3 and S2≡S4 use identical infrastructure, workload, trials and seed — 
 
 ---
 
-## 🔌 API
+## 🧰 Tech Stack
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Service + engine status |
-| `GET` | `/api/scenarios` | Scenario catalogue (S1–S5) |
-| `POST` | `/api/experiments/run` | Run one scenario |
-| `POST` | `/api/experiments/suite` | Run the S1–S5 suite |
-| `GET` | `/api/experiments` | Experiment history |
-| `GET` | `/api/experiments/{id}/export.csv` | Per-task CSV export |
+| Layer | Technology |
+|---|---|
+| ☕ Language | Java 17 |
+| 🍃 Backend | Spring Boot 3.4.5 · REST API |
+| ☁️ Simulation | CloudSim Plus 8.5.7 |
+| 🗄️ Persistence | H2 file database · JPA / Hibernate |
+| 🖥️ Frontend | Vanilla JS · HTML · CSS · SVG charts |
+| 🧰 Build / deploy | Maven · Docker |
 
 ---
 
@@ -135,6 +122,19 @@ docker compose down              # stop (the cloudguard-data volume is kept)
 ```
 
 The app serves the dashboard at **http://localhost:8080** and the API at **/api/health**. H2 data persists to the `cloudguard-data` volume (`/app/data`), so experiment history survives restarts.
+
+---
+
+## 🔌 API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service + engine status |
+| `GET` | `/api/scenarios` | Scenario catalogue (S1–S5) |
+| `POST` | `/api/experiments/run` | Run one scenario |
+| `POST` | `/api/experiments/suite` | Run the S1–S5 suite |
+| `GET` | `/api/experiments` | Experiment history |
+| `GET` | `/api/experiments/{id}/export.csv` | Per-task CSV export |
 
 ---
 
