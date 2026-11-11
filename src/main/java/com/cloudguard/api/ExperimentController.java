@@ -63,7 +63,12 @@ public class ExperimentController {
         return repository.findTop50ByOrderByCreatedAtDesc().stream().map(e -> {
             Map<String,Object> m = new LinkedHashMap<>();
             m.put("id",e.getId()); m.put("scenarioId",e.getScenarioId()); m.put("scenarioName",e.getScenarioName());
-            m.put("createdAt",e.getCreatedAt()); m.put("status",e.getStatus()); return m;
+            m.put("createdAt",e.getCreatedAt()); m.put("status",e.getStatus());
+            // Expose the already-persisted request parameters (read-only) so the frontend can verify
+            // workload/infrastructure/execution equivalence for protected-vs-unprotected comparisons.
+            try { m.put("parameters", e.getRequestJson()==null ? null : mapper.readValue(e.getRequestJson(), Map.class)); }
+            catch (Exception ex) { m.put("parameters", null); }
+            return m;
         }).toList();
     }
 

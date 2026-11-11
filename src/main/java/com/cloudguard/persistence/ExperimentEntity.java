@@ -19,4 +19,5 @@ public class ExperimentEntity {
     }
     public String getId(){return id;} public String getScenarioId(){return scenarioId;} public String getScenarioName(){return scenarioName;}
     public Instant getCreatedAt(){return createdAt;} public String getStatus(){return status;} public String getResultJson(){return resultJson;}
+    public String getRequestJson(){return requestJson;}
 }
