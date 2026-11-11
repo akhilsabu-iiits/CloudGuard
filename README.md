@@ -98,23 +98,6 @@ S1≡S3 and S2≡S4 use identical infrastructure, workload, trials and seed — 
 
 ---
 
-## 📊 Results
-
-20 trials per scenario (seeds 42–61); `±` = 95% CI. All completion times are **simulated** Cloudlet finish − arrival time.
-
-| Scenario | Admitted | Rejected | Avg completion (sim s) | Makespan (sim s) | Throughput (tasks/sim-s) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| **S1 = S3** | 100 | 0 | 103.608 ± 0.429 | 258.985 | 0.3861 |
-| **S2** | 500 | 0 | 611.868 ± 0.919 | 1279.555 | 0.3908 |
-| **S4** | 350 | 150 | 424.215 ± 0.743 | 899.463 | 0.3891 |
-| **S5 · 25/2** | 145 | 355 | 164.959 | — | 0.3835 |
-| **S5 · 50/5** | 350 | 150 | 424.215 | 899.463 | 0.3891 |
-| **S5 · 100/10** | 500 | 0 | 611.868 | 1279.555 | 0.3908 |
-
-**Key finding.** Admission control is transparent at normal load (S1 ≡ S3). Under elevated load it rejects 30% of tasks and cuts admitted-task average completion time by **~31%** and makespan by **~30%**, while throughput stays ≈ constant (capacity-bound by 4 VM processing elements). The S5 sweep shows a monotonic rejection ↔ latency trade-off — load is **shed**, capacity is **not added**.
-
----
-
 ## 🔌 API
 
 | Method | Endpoint | Description |
