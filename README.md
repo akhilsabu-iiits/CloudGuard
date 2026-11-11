@@ -202,17 +202,36 @@ git clone https://github.com/akhilsabu-iiits/CloudGuard.git
 cd CloudGuard
 ```
 
-### 2. Run
+### 2. Run — Option A · Maven
 
 ```bash
 mvn spring-boot:run            # starts the app at http://localhost:8080
 # or build a jar:
 mvn clean package && java -jar target/*.jar
-# or with Docker:
-docker compose up --build -d
 ```
 
 Run the tests with `mvn test`.
+
+### 2. Run — Option B · 🐳 Docker
+
+Install Docker Desktop (includes Docker Compose) for your platform:
+
+| Platform | Install |
+|---|---|
+| 🪟 Windows / 🍎 macOS | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| 🐧 Linux | [Docker Engine](https://docs.docker.com/engine/install/) + [Compose plugin](https://docs.docker.com/compose/install/linux/) |
+
+Then, from the project root:
+
+```bash
+docker compose up --build -d     # build the image and start in the background
+docker compose logs -f           # follow the logs
+docker compose down              # stop (the cloudguard-data volume is kept)
+```
+
+The container exposes **port 8080** and persists the H2 database to the named volume `cloudguard-data` (mounted at `/app/data`), so experiment history survives restarts.
+
+### Access
 
 | Service | URL |
 |---|---|
