@@ -155,19 +155,6 @@ The app serves the dashboard at **http://localhost:8080** and the API at **/api/
 
 ---
 
-## 📂 Repository Structure
-
-```text
-CloudGuard/
-├── pom.xml · Dockerfile · compose.yaml
-├── src/      # Spring Boot + CloudSim Plus app (Java) and frontend (static/)
-└── docs/     # screenshots, architecture diagram, RESEARCH_CONFIGURATION.md
-```
-
-The frozen, source-verified configuration baseline is in [`docs/RESEARCH_CONFIGURATION.md`](docs/RESEARCH_CONFIGURATION.md).
-
----
-
 ## ⚠️ Scope & Limitations
 
 - **Simulation, not real DoS/DDoS** — no real HTTP, packets, or network traffic; "DoS-like pressure" = elevated computational task arrivals.
