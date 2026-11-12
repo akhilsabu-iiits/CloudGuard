@@ -2,7 +2,6 @@
 
 **Project:** Performance Evaluation of Cloud Services Under Simulated DoS Workloads
 **Stack:** Java 17 · Spring Boot 3.4.5 · CloudSim Plus 8.5.7 · Maven · H2 (file-backed) · vanilla-JS frontend
-**Captured at:** HEAD `f069304` (working tree with the Reset + subtitle + F-T23 + cache-bump changes uncommitted)
 
 ## Research framing (academic scope)
 CloudGuard is a **CloudSim Plus computational-task workload and admission-control simulation**. It is **not** real network-layer DoS/DDoS testing. Cloudlets represent computational tasks that abstract application workload. "Task completion time" is the **simulated Cloudlet finish time minus arrival time**, not real HTTP latency, network saturation, or packet flooding. The workload models **sustained elevated computational task-arrival pressure**. Admission control **sheds computational workload**: lower completion times for admitted tasks come at the cost of **rejecting incoming tasks**; it does **not** increase physical infrastructure capacity. (Source: `modellingNote` in `CloudSimSimulationService.run()` and `researchNote()` in `app.js`.)

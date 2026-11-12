@@ -12,5 +12,5 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: Build application
-        run: mvn -B -DskipTests package
+      - name: Build and test
+        run: mvn -B package
