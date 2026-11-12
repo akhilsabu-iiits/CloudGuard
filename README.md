@@ -34,22 +34,9 @@ Under the elevated workload, the policy cuts average completion time by **30.7%*
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A["<b>Dashboard</b><br/>Vanilla JS"] --> B["<b>Pick scenario</b><br/>sets workload and policy"]
-    B --> C["<b>Scenario matrix</b><br/>S1 – S5"]
-    C --> D["<b>Simulation</b><br/>CloudSim Plus · 4 VMs"]
-    D --> E["<b>Metrics</b><br/>averaged over 20 trials"]
-```
+![CloudGuard architecture and scenario matrix](docs/architecture/scenario-architecture.png)
 
-The scenario chosen in the dashboard fixes two things — the workload and whether the policy is applied — which places the run in one cell of the scenario matrix:
-
-| | Without policy | With policy |
-|---|---|---|
-| **Normal** · 100 tasks | **S1** — nothing refused, all 100 tasks run | **S3** — nothing refused, the bucket never empties |
-| **Elevated** · 500 tasks | **S2** — nothing refused, all 500 tasks run | **S4, S5** — bucket throttles: 350 admitted, 150 refused |
-
-Only one cell in four filters anything: the bucket binds only when arrivals outpace its refill rate.
+The scenario chosen in the dashboard fixes two things — the workload and whether the policy is applied — which places the run in one cell of the scenario matrix. The simulation then runs on CloudSim Plus and the metrics are averaged over 20 trials.
 
 <details>
 <summary><b>Component view</b></summary>
@@ -62,6 +49,8 @@ Only one cell in four filters anything: the bucket binds only when arrivals outp
 ---
 
 ## Token Bucket Admission Policy
+
+![Token Bucket admission control mechanism](docs/architecture/token-bucket-policy.png)
 
 A fixed allowance that refills at a steady rate. A task is served only if a token is waiting for it.
 
