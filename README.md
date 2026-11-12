@@ -82,16 +82,6 @@ docker compose up --build -d
 
 Open the dashboard at **http://localhost:8080**.
 
-## Team
-
-Group 4 · M.Tech Cybersecurity · IIIT Sri City · Cloud Security course project
-
-| Name | Roll number |
-|---|---|
-| Akhil Sabu | OMCS25S00005 |
-| Naveen Kumar Kothi | OMCS25S00053 |
-| S Vaishak | OMCS25S00070 |
-
 ## Acknowledgements
 
 Built on [CloudSim Plus](https://cloudsimplus.org) (GPL-3.0), Spring Boot and the H2 Database Engine.
